@@ -90,9 +90,9 @@ function Characters() {
   const handleNext = () => {
     try {
       setName("")
-      setDebouncedName("")
+      // setDebouncedName("")
       setGender("")
-      setRace([])
+      // setRace([])
       setDropdown(false)
       setPage(page + 1);
       setAscending(true)
@@ -104,9 +104,9 @@ function Characters() {
   const handlePrev = () => {
     if (page === 1) return;
      setName("");
-     setDebouncedName("");
+    //  setDebouncedName("");
      setGender("");
-     setRace([]);
+    //  setRace([]);
       setDropdown(false);
       setAscending(true);
      
