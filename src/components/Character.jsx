@@ -10,7 +10,7 @@ function Character({character}) {
   const navigate = useNavigate()
 
   return (
-    <div className="h-[300px] w-[250px] border rounded-md border-gray-400 bg-gray-100 flex flex-col items-center p-4 gap-4 cursor-pointer" onClick={()=>navigate('/details', { state:{data: character} })}>
+    <div className="h-[300px] w-[250px] border rounded-md border-gray-400 bg-gray-100 flex flex-col items-center p-4 gap-4 cursor-pointer" onClick={()=>navigate(`/characters/${character._id}`)}>
       {character.gender === "Male" ? (
         <img src={male} alt={character.name} className="w-[100px] h-[100px]" />
       ) : (
