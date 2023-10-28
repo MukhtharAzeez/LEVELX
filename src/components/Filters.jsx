@@ -1,7 +1,7 @@
 /* eslint-disable react/prop-types */
 import { useState } from "react";
 
-function Filters({ name, setName, gender, setGender, race, setRace, ascending, sortByName, dropdown, setDropdown }) {
+function Filters({ name, setName, gender, setGender, race, setRace, ascending,setAscending, dropdown, setDropdown }) {
   
   const [races] = useState([
   "Hobbits",
@@ -30,13 +30,13 @@ function Filters({ name, setName, gender, setGender, race, setRace, ascending, s
 
 
   return (
-    <div className="flex gap-8 flex-wrap w-3/4 justify-end">
+    <div className="flex gap-8 flex-wrap w-full justify-end">
       {/* Sort by Name */}
       <div>
         Name sorted order: {ascending ? "Ascending" : "Descending"}
         <button
           className="px-4 py-1 bg-black text-white rounded-md ml-2"
-          onClick={() => sortByName(ascending ? "desc" : "asc")}
+          onClick={() => setAscending(!ascending)}
         >
           Change
         </button>
@@ -108,6 +108,8 @@ function Filters({ name, setName, gender, setGender, race, setRace, ascending, s
             ))}
           </ul>
         )}
+
+        
       </div>
     </div>
   );

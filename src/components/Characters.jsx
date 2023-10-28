@@ -12,12 +12,15 @@ function Characters() {
   const [debouncedName, setDebouncedName] = useState("");
   const [gender, setGender] = useState("");
   const [race, setRace] = useState([]);
-  const [clearRace, setClearRace] = useState(false);
   const [ascending, setAscending] = useState(true);
   const [page, setPage] = useState(1);
   const [limit, setLimit] = useState(10);
   const [dropdown, setDropdown] = useState(false);
+  const [preventFromContinuosCalling, setPreventFromContinuosCalling] = useState(true)
 
+  const [filteredLink, setFilteredLink] = useState(
+    `/character?limit=10&page=1`
+  );
 
   const fetchCharacters = async (url) => {
     try {
@@ -26,31 +29,49 @@ function Characters() {
       setCharacters(data);
       setLoading(false);
     } catch (error) {
-      setError("Oops, Something went wrong")
+      setError("Oops, Something went wrong");
     }
   };
-  useEffect(() => {
-    if (race.length === 0) {
-      setClearRace(true);
-      return;
-    }
-    setPage(1)
-    fetchCharacters(
-      `/character?limit=${limit}&page=${1}&race=${race.join(",")}`
-    );
-    
-  }, [race]);
 
   useEffect(() => {
-    setPage(1)
-    if (debouncedName.length === 0) {
-      fetchCharacters(`/character?limit=${limit}&page=${1}`);
-      return;
+    if(preventFromContinuosCalling){
+      const object = {
+        name: debouncedName,
+        gender: gender,
+        race: race,
+        asc: ascending,
+      };
+      setPage(1);
+      let link = `/character?limit=${limit}&page=${1}`;
+      try {
+        for (const [key, value] of Object.entries(object)) {
+          if (key === "name" && value.length > 0) {
+            link += `&${key}=/${value}/i`;
+          }
+          if (key === "race" && value.length > 0) {
+            link += `&race=${race.join(",")}`;
+          }
+          if (key === "asc") {
+            link += `&sort=name:${ascending ? "asc" : "desc"}`;
+          }
+          if (key === "gender" && value.length > 0 && value != "any") {
+            link += `&gender=${value}`;
+          }
+        }
+      } catch (error) {
+        link = `/character?limit=${limit}&page=${1}`;
+      }
+      fetchCharacters(link);
+      setFilteredLink(link);
     }
-    fetchCharacters(
-      `/character?limit=${limit}&page=${1}&name=/${debouncedName}/i`
-    );
-  }, [debouncedName]);
+  }, [
+    debouncedName,
+    gender,
+    race,
+    ascending,
+    limit,
+    preventFromContinuosCalling,
+  ]);
 
   useEffect(() => {
     const timeoutId = setTimeout(() => {
@@ -59,66 +80,40 @@ function Characters() {
     return () => clearTimeout(timeoutId);
   }, [name]);
 
-  useEffect(() => {
-    setPage(1)
-    if (gender === "any") {
-      fetchCharacters(`/character?limit=${limit}&page=${1}`);
-      return;
-    }
-    if (gender === "Male" || gender === "Female")
-      fetchCharacters(
-        `/character?limit=${limit}&page=${1}&gender=${gender}`
-      );
-  }, [gender]);
-
-  useEffect(() => {
-    if (clearRace) {
-      setPage(1)
-      fetchCharacters(`/character?limit=${limit}&page=${1}`);
-      setClearRace(false);
-    }
-  }, [clearRace]);
-
-  const sortByName = (value) => {
-    setPage(1)
-    fetchCharacters(
-      `/character?limit=${limit}&page=${1}&sort=name:${value}`
-    );
-    setAscending(!ascending);
-  };
-
   const handleNext = () => {
     try {
-      setName("")
-      // setDebouncedName("")
-      setGender("")
-      // setRace([])
-      setDropdown(false)
+      const updatedLink = filteredLink.replace(/page=\d+/, `page=${page + 1}`);
+      setFilteredLink(updatedLink);
       setPage(page + 1);
-      setAscending(true)
-      fetchCharacters(`/character?limit=${limit}&page=${page + 1}`);
+      fetchCharacters(updatedLink);
     } catch (error) {
       setCharacters([]);
     }
   };
   const handlePrev = () => {
     if (page === 1) return;
-     setName("");
-    //  setDebouncedName("");
-     setGender("");
-    //  setRace([]);
-      setDropdown(false);
-      setAscending(true);
-     
+    const updatedLink = filteredLink.replace(/page=\d+/, `page=${page - 1}`);
+    setFilteredLink(updatedLink);
     setPage(page - 1);
-    fetchCharacters(`/character?limit=${limit}&page=${page - 1}`);
+    fetchCharacters(updatedLink);
   };
 
   const handleLimitChange = (e) => {
-    setLimit(e.target.value);
-    setPage(1)
-    fetchCharacters(`/character?limit=${e.target.value}&page=${1}`);
+    setLimit(e.target.value); 
   };
+
+  const refresh = () => {
+    setPreventFromContinuosCalling(false)
+    setName("")
+    setDebouncedName("")
+    setGender("")
+    setAscending(true)
+    setLimit(10)
+    setPage(1)
+    setRace([])
+    setDropdown(false)
+    setPreventFromContinuosCalling(true)
+  }
 
   return (
     <>
@@ -133,7 +128,6 @@ function Characters() {
           setRace={setRace}
           ascending={ascending}
           setAscending={setAscending}
-          sortByName={sortByName}
           dropdown={dropdown}
           setDropdown={setDropdown}
         />
@@ -182,6 +176,14 @@ function Characters() {
             {page + 1}
           </button>
         </div>
+      )}
+      {(name || gender || race.length > 0 || !ascending) && (
+        <button
+          className="absolute bottom-10 left-10 flex gap-4 bg-gray-400 px-6 py-2 rounded-2xl"
+          onClick={refresh}
+        >
+          Clear filters and refresh
+        </button>
       )}
     </>
   );
